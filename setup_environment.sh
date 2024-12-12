@@ -1,9 +1,9 @@
 # Step 1: Create a new environment
-mamba create -n viral_pipeline -y \
+mamba create -n virpipe_short1 -y \
     python=3.9 \
     snakemake \
     fastqc \
-    trimgalore \
+    trim-galore \
     kraken2 \
     spades \
     centrifuge \
@@ -11,34 +11,26 @@ mamba create -n viral_pipeline -y \
     git
 
 # Activate the environment
-mamba activate viral_pipeline
+mamba activate virpipe_short1
 
 # Step 2: Install KrakenTools (requires git and manual installation)
+mkdir tools
+cd tools
 git clone https://github.com/jenniferlu717/KrakenTools.git
 cd KrakenTools
 chmod +x *.py
-# Add KrakenTools directory to PATH for easier use
-export PATH=$(pwd):$PATH
-cd ..
+cd ../
 
 # Step 3: Install VirSorter2 via conda
-mamba install -c bioconda -c conda-forge virsorter2 -y
+git clone https://github.com/jiarong/VirSorter2.git
+cd VirSorter2
+pip install -e .
+cd ../
 
-# Step 4: Install DeepVirFinder (requires pip)
-pip install deepvirfinder
+# Step 4: Install DeepVirFinder
+git clone https://github.com/jessieren/DeepVirFinder.git
+cd../
+
 
 # Step 5: Install additional Python dependencies if needed
 pip install pandas numpy
-
-# Step 6: Verify installations
-echo "Verifying tool installations..."
-echo "FastQC: $(fastqc --version)"
-echo "Trim Galore: $(trim_galore --version)"
-echo "Kraken2: $(kraken2 --version)"
-echo "SPAdes: $(spades.py --version)"
-echo "Centrifuge: $(centrifuge --version)"
-echo "VirSorter2: $(virsorter run --help | head -n 1)"
-echo "DeepVirFinder: $(run_deepvirfinder.py --version 2>&1 | grep 'DeepVirFinder')"
-
-echo "Environment setup is complete. Activate it with 'mamba activate viral_pipeline'."
-

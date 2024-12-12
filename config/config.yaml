@@ -1,4 +1,4 @@
-samples: ["2669_S31", "9328_S121", '9347_S158']
+samples: ["9328_S121"]
 #threads: 50
 kraken2_db: "/media/eternus1/nfs/projects/databases/kraken2_db"
 centrifuge_db: "media/eternus1/data/metagenomes/users/igrab/imgdb3/IMG_VR3"
