@@ -44,4 +44,4 @@ To be added:
 
 
 ## DAG
-<img src="https://github.com/user-attachments/assets/434f5f39-8d63-4b37-83ba-a635c537d4b7" width="350" height="700" />
+<img src="https://github.com/user-attachments/assets/434f5f39-8d63-4b37-83ba-a635c537d4b7" width="450" height="700" />
