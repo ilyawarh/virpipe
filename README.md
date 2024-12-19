@@ -41,3 +41,7 @@ To be added:
 --------------------------
 - IMGvr_to_Kaiju.py - python script to transform IMG/VR database as usable inpute for Kaiju custom database
 - report_summary.py - python script to make a comprehensive summary for large dataset analysis (one .tsv file summing up {sample}_reports.tsv and MultiQC html)
+
+
+## DAG
+![dag-2](https://github.com/user-attachments/assets/434f5f39-8d63-4b37-83ba-a635c537d4b7)
