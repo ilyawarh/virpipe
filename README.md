@@ -1,5 +1,5 @@
 # short-pipe-v2
-short reads, standard scheme, nt+nr databases (Base Cemtrifuge + Kaiju Indexes)
+short reads, standard scheme, nt+nr databases (Base Centrifuge + Kaiju Indexes)
 
 Pipeline Directory Structure:
 -----------------------------
