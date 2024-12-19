@@ -7,29 +7,29 @@ RESULTS_DIR = "results"
 
 rule all:
 	input:
-	  expand(f"{RESULTS_DIR}/reports/{{sample}}_report.tsv", sample=SAMPLES),
-	  expand(f"{RESULTS_DIR}/fastqc/{{sample}}/{{sample}}_R1_fastqc.html", sample=SAMPLES)
+	  expand(f"{RESULTS_DIR}/reports/{{sample}}_report.tsv", sample=SAMPLES)
+#	  expand(f"{RESULTS_DIR}/fastqc/{{sample}}/{{sample}}_R1_fastqc.html", sample=SAMPLES)
 
 
 rule fastqc_before:
     input:
-        r1="raw_reads/{sample}_R1.fastq.gz",
-        r2="raw_reads/{sample}_R2.fastq.gz"
+        r1="raw_reads/{sample}_R1_001.fastq.gz",
+        r2="raw_reads/{sample}_R2_001.fastq.gz"
     output:
         html=[f"{RESULTS_DIR}/fastqc/{{sample}}/{{sample}}_R1_fastqc.html", f"{RESULTS_DIR}/fastqc/{{sample}}/{{sample}}_R2_fastqc.html"],
         zip=[f"{RESULTS_DIR}/fastqc/{{sample}}/{{sample}}_R1_fastqc.zip", f"{RESULTS_DIR}/fastqc/{{sample}}/{{sample}}_R2_fastqc.zip"]
     shell:
-        "fastqc {input.r1} {input.r2} -o {RESULTS_DIR}/fastqc/ -t 16"
+        "fastqc {input.r1} {input.r2} -o {RESULTS_DIR}/fastqc/ -t 8"
 
 rule trim_galore:
     input:
-        r1="raw_reads/{sample}_R1.fastq.gz",
-        r2="raw_reads/{sample}_R2.fastq.gz"
+        r1="raw_reads/{sample}_R1_001.fastq.gz",
+        r2="raw_reads/{sample}_R2_001.fastq.gz"
     output:
         r1_trimmed=f"{RESULTS_DIR}/trimmed_reads/{{sample}}_R1_val_1.fq.gz",
         r2_trimmed=f"{RESULTS_DIR}/trimmed_reads/{{sample}}_R2_val_2.fq.gz"
     shell:
-        "trim_galore --paired --fastqc -j 16 -o {RESULTS_DIR}/trimmed_reads/ {input.r1} {input.r2}"
+        "trim_galore --paired --length 21 -j 16 -o {RESULTS_DIR}/trimmed_reads/ {input.r1} {input.r2}"
 
 rule kraken2:
     input:
@@ -40,7 +40,7 @@ rule kraken2:
         classified=f"{RESULTS_DIR}/kraken2/{{sample}}/{{sample}}_classified.fastq"
     threads: workflow.cores
     shell:
-        "kraken2 --paired --db {config[kraken2_db]} --threads {threads} "
+        "kraken2 --paired --db {config[kraken2_db]} --threads {threads} --confidence 0.3 "
         "--report {output.report} --output {output.classified} {input.r1} {input.r2}"
 
 rule extract_viral_reads:
@@ -54,7 +54,7 @@ rule extract_viral_reads:
         "tools/KrakenTools/extract_kraken_reads.py -k {input.classified} -1 {RESULTS_DIR}/trimmed_reads/{wildcards.sample}_R1_val_1.fq.gz -2 {RESULTS_DIR}/trimmed_reads/{wildcards.sample}_R2_val_2.fq.gz -r {input.report} --include-children "
         "--exclude --taxid 2 2759 -o {output.r1_viral} -o2 {output.r2_viral} --fastq-output"
 
-rule metaviralSPAdes:
+rule metaSPAdes:
     input:
         r1_viral=rules.extract_viral_reads.output.r1_viral,
         r2_viral=rules.extract_viral_reads.output.r2_viral
@@ -67,7 +67,7 @@ rule metaviralSPAdes:
 
 rule centrifuge:
     input:
-        assembly=rules.metaviralSPAdes.output.assembly
+        assembly=rules.metaSPAdes.output.assembly
     output:
         report=f"{RESULTS_DIR}/centrifuge/{{sample}}/{{sample}}_centrifuge_summary.tsv",
 	reads=f"{RESULTS_DIR}/centrifuge/{{sample}}/{{sample}}_centrifuge_reads.tsv"
@@ -77,7 +77,7 @@ rule centrifuge:
 
 rule deepvirfinder:
     input:
-        assembly=rules.metaviralSPAdes.output.assembly
+        assembly=rules.metaSPAdes.output.assembly
     output: scores=f"{RESULTS_DIR}/deepvirfinder/{{sample}}/contigs.fasta_gt1bp_dvfpred.txt"
     threads: workflow.cores
     conda: "config/deepvirfinder_env.yaml"
@@ -86,7 +86,7 @@ rule deepvirfinder:
 
 rule virsorter2:
     input:
-        assembly=rules.metaviralSPAdes.output.assembly
+        assembly=rules.metaSPAdes.output.assembly
     output: file=f"{RESULTS_DIR}/virsorter2/{{sample}}/final-viral-score.tsv"
     threads: workflow.cores
     conda: "config/virsorter2_env.yaml"

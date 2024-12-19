@@ -1,5 +1,5 @@
 # Step 1: Create a new environment
-mamba create -n virpipe_short1 -y \
+mamba create -c bioconda -c conda-forge -c default -c ursky -n virpipe_short1 -y \
     python=3.9 \
     snakemake \
     fastqc \
@@ -24,12 +24,12 @@ cd ../
 # Step 3: Install VirSorter2 via conda
 git clone https://github.com/jiarong/VirSorter2.git
 cd VirSorter2
-pip install -e .
+pip install -e ./
 cd ../
 
 # Step 4: Install DeepVirFinder
 git clone https://github.com/jessieren/DeepVirFinder.git
-cd../
+cd ../
 
 
 # Step 5: Install additional Python dependencies if needed
