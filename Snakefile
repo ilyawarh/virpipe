@@ -68,7 +68,7 @@ rule kaiju:
     threads: workflow.cores
     shell:
         "kaiju -t {config[kaiju_dmps]}/nodes.dmp -f {config[kaiju_db]} -i {input.assembly} -z {threads} -o {output.preport} "
-        "&& kaiju-addTaxonNames -t {config[kaiju_dmps]}/nodes.dmp -n {config[kaiju_dmps]}/names.dmp -i {output.preport} -o {output.summary} "  
+        "&& kaiju-addTaxonNames -t {config[kaiju_dmps]}/nodes.dmp -n {config[kaiju_dmps]}/names.dmp -i {output.preport} -o {output.summary} -p"  
 
 
 rule genomad:
