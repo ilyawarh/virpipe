@@ -41,5 +41,7 @@ Steps to Run the Pipeline:
    `snakemake --cores <number_of_cores> --use-conda`
    - you may use `--conda-frontend mamba` if your mamba version is below 2.*
 
-  
+
+Pipeline DAG:
+--------------------------
 <img src="https://github.com/user-attachments/assets/0b349893-86c5-4486-8860-b05c79730d67" width="450" heigt="700" />
