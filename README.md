@@ -38,12 +38,8 @@ Steps to Run the Pipeline:
    `conda activate virpipe_short2`
 4. Run the pipeline with:
    `snakemake --cores <number_of_cores> --use-conda`
-<<<<<<< HEAD
    - If your mamba version is below 2.* you may use `--conda-frontend mamba` to speed up the subenvs building;
    - You can run single-end library analysis by specifying `--snakefile SE_Snakefile`; default paired-end sequences analysis is copied to PE_Snakefile so you can modify actual Snakefile; 
-=======
-   - If your mamba version is below 2.* you may use `--conda-frontend mamba` to speed up the subenvs building
->>>>>>> e07914f2483558f33ef34b121440e4638bc6d422
 
 To be added:
 --------------------------
