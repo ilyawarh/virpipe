@@ -1,5 +1,5 @@
 # short-pipe-v2
-short reads, standard scheme, nt+nr databases (Base Cemtrifuge + Kaiju Indexes)
+short reads, standard scheme, nt+nr databases (Base Centrifuge + Kaiju Indexes)
 
 Pipeline Directory Structure:
 -----------------------------
@@ -27,7 +27,8 @@ Pipeline Directory Structure:
 
 Additional Files:
 --------------------------
-- setup_environment.sh - Bash script to install the env (including third party tools)
+- setup_environment.sh - Bash script to install and activate the env (including third party tools)
+- report_summary.py - python script to make a comprehensive summary for large dataset analysis (one .tsv file summing up {sample}_reports.tsv)
 
 Steps to Run the Pipeline:
 --------------------------
@@ -37,13 +38,17 @@ Steps to Run the Pipeline:
    `conda activate virpipe_short2`
 4. Run the pipeline with:
    `snakemake --cores <number_of_cores> --use-conda`
+<<<<<<< HEAD
    - If your mamba version is below 2.* you may use `--conda-frontend mamba` to speed up the subenvs building;
    - You can run single-end library analysis by specifying `--snakefile SE_Snakefile`; default paired-end sequences analysis is copied to PE_Snakefile so you can modify actual Snakefile; 
+=======
+   - If your mamba version is below 2.* you may use `--conda-frontend mamba` to speed up the subenvs building
+>>>>>>> e07914f2483558f33ef34b121440e4638bc6d422
 
 To be added:
 --------------------------
-- IMGvr_to_Kaiju.py - python script to transform IMG/VR database as usable inpute for Kaiju custom database
-- report_summary.py - python script to make a comprehensive summary for large dataset analysis (one .tsv file summing up {sample}_reports.tsv and MultiQC html)
+- IMGvr_to_Kaiju.py - python script to transform IMG/VR database as usable inpute for Kaiju custom database;
+- MultiQC optional module for easy QC check
 
 
 ## DAG
