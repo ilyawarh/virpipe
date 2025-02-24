@@ -6,6 +6,7 @@ mamba create -n virpipe_short2 -c bioconda -c conda-forge -c default -c ursky -y
     trim-galore \
     kaiju \
     spades \
+    megahit \
     centrifuge \
     samtools \
     git

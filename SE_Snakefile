@@ -1,0 +1,106 @@
+configfile: "config/config.yaml"
+
+#rename RESULTS_DIR to compile results to the different folder
+SAMPLES = config["samples"]
+RESULTS_DIR = "results"
+
+
+
+rule all:
+	input:
+	  expand(f"{RESULTS_DIR}/reports/{{sample}}_report.tsv", sample=SAMPLES)
+#	  expand(f"{RESULTS_DIR}/fastqc/{{sample}}/{{sample}}_fastqc.html", sample=SAMPLES)
+#uncomment second expand to collect pretrimmed fastQC reports
+
+rule fastqc_before:
+    input:
+        r1="raw_reads/{sample}.fq.gz"
+    output:
+        html=f"{RESULTS_DIR}/fastqc/{{sample}}/{{sample}}_fastqc.html",
+        zip=f"{RESULTS_DIR}/fastqc/{{sample}}/{{sample}}_fastqc.zip"
+    shell:
+        "fastqc {input.r1} -o {RESULTS_DIR}/fastqc/ -t 8"
+
+rule trim_galore:
+    input:
+        r1="raw_reads/{sample}.fq.gz"
+    output:
+        r1_trimmed=f"{RESULTS_DIR}/trimmed_reads/{{sample}}_trimmed.fq.gz"
+    threads: workflow.cores  
+    shell:
+        "trim_galore --length 21 -j {threads} -o {RESULTS_DIR}/trimmed_reads/ {input.r1}"
+#add --fastqc to perform fastQC after trimming  
+
+rule centrifuge:
+    input:
+#        r1_trimmed="raw_reads/{sample}.fastq.gz"
+        r1_trimmed=rules.trim_galore.output.r1_trimmed
+    output:
+        reads1=f"{RESULTS_DIR}/centrifuge/{{sample}}/un-seqs.fastq.gz",
+        report=f"{RESULTS_DIR}/centrifuge/{{sample}}/{{sample}}_centrifuge_reads.tsv"
+    threads: workflow.cores
+    shell:
+        "centrifuge -x {config[centrifuge_origin_db]} -U {input.r1_trimmed} -q --threads {threads} -S {output.report} "
+        "--un {RESULTS_DIR}/centrifuge/{wildcards.sample}/ --min-hitlen 30 --host-taxids 5654 --exclude-taxids 10239,0 && mv "
+        "{RESULTS_DIR}/centrifuge/{wildcards.sample}/un-seqs {RESULTS_DIR}/centrifuge/{wildcards.sample}/un-seqs.fastq && gzip {RESULTS_DIR}/centrifuge/{wildcards.sample}/un-seqs.fastq"
+
+rule megahit:
+    input:
+        r1_viral=rules.centrifuge.output.reads1
+    output:
+        assembly=f"{RESULTS_DIR}/assemblies/{{sample}}/final.contigs.fa"
+    threads: workflow.cores
+    shell:
+        "megahit -r {input.r1_viral} -o {RESULTS_DIR}/assemblies/{wildcards.sample}/out_folder --presets meta-sensitive -t {threads} && cp "
+        "{RESULTS_DIR}/assemblies/{{sample}}/out_folder/final.contigs.fa {RESULTS_DIR}/assemblies/{{sample}}/final.contigs.fa "
+        "&& sed -i '/^>/ s/ /_/g' {output.assembly} "
+
+
+rule kaiju:
+    input:
+        assembly=rules.megahit.output.assembly
+    output:
+        preport=f"{RESULTS_DIR}/kaiju/{{sample}}/{{sample}}_kaiju_report.tsv"
+#        summary=f"{RESULTS_DIR}/kaiju/{{sample}}/{{sample}}_kaiju_summary.tsv"
+    threads: workflow.cores
+    shell:
+        "kaiju -t {config[kaiju_dmps]}/nodes.dmp -f {config[kaiju_db]} -i {input.assembly} -z {threads} -o {output.preport} "
+          
+
+rule kaiju_report:
+    input:
+        preport=rules.kaiju.output.preport
+    output:
+        summary=f"{RESULTS_DIR}/kaiju/{{sample}}/sums/{{sample}}_kaiju_summary.tsv"
+    shell:
+        "kaiju-addTaxonNames -t {config[kaiju_dmps]}/nodes.dmp -n {config[kaiju_dmps]}/names.dmp -i {input.preport} -o {output.summary} -p"        
+
+rule genomad:
+    input:
+        assembly=rules.megahit.output.assembly
+    output: 
+        scores=f"{RESULTS_DIR}/genomad/{{sample}}/final.contigs_summary/final.contigs_virus_summary.tsv"
+    conda: 
+        "config/genomad.yaml"
+    shell:
+        "genomad end-to-end --cleanup {input.assembly} {RESULTS_DIR}/genomad/{wildcards.sample} {config[genomad_db]} "
+
+rule virsorter2:
+    input:
+        assembly=rules.megahit.output.assembly
+    output: 
+        file=f"{RESULTS_DIR}/virsorter2/{{sample}}/final-viral-score.tsv"
+    threads: workflow.cores
+    conda: 
+        "config/virsorter2_env.yaml"
+    shell: "virsorter config --init-source --db-dir={config[virsorter2_db]} && virsorter run -i {input.assembly} -w {RESULTS_DIR}/virsorter2/{wildcards.sample} --db-dir {config[virsorter2_db]} --min-score 0.5 -j {threads} --include-groups 'RNA,ssDNA,NCLDV' --provirus-off"
+
+rule generate_report:
+    input:
+        kaiju=f"{RESULTS_DIR}/kaiju/{{sample}}/sums/{{sample}}_kaiju_summary.tsv",
+        virsorter2=f"{RESULTS_DIR}/virsorter2/{{sample}}/final-viral-score.tsv",
+        genomad=f"{RESULTS_DIR}/genomad/{{sample}}/final.contigs_summary/final.contigs_virus_summary.tsv"
+    output:
+        report=f"{RESULTS_DIR}/reports/{{sample}}_report.tsv"
+    script:
+        "scripts/generate_report2.py"
